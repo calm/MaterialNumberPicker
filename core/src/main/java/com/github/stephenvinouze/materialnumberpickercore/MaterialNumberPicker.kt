@@ -1,18 +1,17 @@
 package com.github.stephenvinouze.materialnumberpickercore
 
 import android.content.Context
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
-import android.graphics.Typeface
+import android.graphics.*
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.text.InputType
 import android.util.AttributeSet
 import android.util.TypedValue
+import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.NumberPicker
+
 
 /**
  * Created by stephenvinouze on 25/09/2017.
@@ -35,7 +34,7 @@ class MaterialNumberPicker : NumberPicker {
             field = value
             divider?.colorFilter = PorterDuffColorFilter(separatorColor, PorterDuff.Mode.SRC_IN)
         }
-    var textColor: Int = DEFAULT_TEXT_COLOR
+    var textColorWidget: Int = DEFAULT_TEXT_COLOR
         set(value) {
             field = value
             updateTextAttributes()
@@ -97,7 +96,7 @@ class MaterialNumberPicker : NumberPicker {
         maxValue: Int = MAX_VALUE,
         value: Int = DEFAULT_VALUE,
         separatorColor: Int = DEFAULT_SEPARATOR_COLOR,
-        textColor: Int = DEFAULT_TEXT_COLOR,
+        textColorWidget: Int = DEFAULT_TEXT_COLOR,
         textSize: Int = DEFAULT_TEXT_SIZE,
         textStyle: Int = DEFAULT_TEXT_STYLE,
         editable: Boolean = DEFAULT_EDITABLE,
@@ -109,7 +108,7 @@ class MaterialNumberPicker : NumberPicker {
         this.maxValue = maxValue
         this.value = value
         this.separatorColor = separatorColor
-        this.textColor = textColor
+        this.textColorWidget = textColorWidget
         this.textSize = textSize
         this.textStyle = textStyle
         this.fontName = fontName
@@ -120,6 +119,7 @@ class MaterialNumberPicker : NumberPicker {
         disableFocusability()
     }
 
+    @JvmOverloads
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
         val a = context.theme.obtainStyledAttributes(attrs, R.styleable.MaterialNumberPicker, 0, 0)
 
@@ -127,9 +127,9 @@ class MaterialNumberPicker : NumberPicker {
         maxValue = a.getInteger(R.styleable.MaterialNumberPicker_mnpMaxValue, MAX_VALUE)
         value = a.getInteger(R.styleable.MaterialNumberPicker_mnpValue, DEFAULT_VALUE)
         separatorColor = a.getColor(R.styleable.MaterialNumberPicker_mnpSeparatorColor, DEFAULT_SEPARATOR_COLOR)
-        textColor = a.getColor(R.styleable.MaterialNumberPicker_mnpTextColor, DEFAULT_TEXT_COLOR)
+        textColorWidget = a.getColor(R.styleable.MaterialNumberPicker_mnpTextColor, DEFAULT_TEXT_COLOR)
         textSize = a.getDimensionPixelSize(R.styleable.MaterialNumberPicker_mnpTextSize, DEFAULT_TEXT_SIZE)
-        textStyle = a.getInt(R.styleable.MaterialNumberPicker_mnpTextColor, DEFAULT_TEXT_STYLE)
+        textStyle = a.getInt(R.styleable.MaterialNumberPicker_mnpTextStyle, DEFAULT_TEXT_STYLE)
         editable = a.getBoolean(R.styleable.MaterialNumberPicker_mnpEditable, DEFAULT_EDITABLE)
         wrapSelectorWheel = a.getBoolean(R.styleable.MaterialNumberPicker_mnpWrapped, DEFAULT_WRAPPED)
         fontName = a.getString(R.styleable.MaterialNumberPicker_mnpFontname)
@@ -158,14 +158,14 @@ class MaterialNumberPicker : NumberPicker {
             Typeface.create(Typeface.DEFAULT, textStyle)
 
         wheelPaint?.let { paint ->
-            paint.color = textColor
+            paint.color = textColorWidget
             paint.textSize = textSize.toFloat()
             paint.typeface = typeface
             (0 until childCount)
                 .map { getChildAt(it) as? EditText }
                 .firstOrNull()
                 ?.let {
-                    it.setTextColor(textColor)
+                    it.setTextColor(textColorWidget)
                     it.setTextSize(TypedValue.COMPLEX_UNIT_SP, pixelsToSp(context, textSize.toFloat()))
                     it.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_NORMAL
                     it.typeface = typeface
@@ -175,6 +175,28 @@ class MaterialNumberPicker : NumberPicker {
         }
     }
 
-    private fun pixelsToSp(context: Context, px: Float): Float =
-        px / context.resources.displayMetrics.scaledDensity
+
+    override fun addView(child: View) {
+        super.addView(child)
+        updateView(child)
+    }
+
+    override fun addView(child: View, index: Int, params: ViewGroup.LayoutParams?) {
+        super.addView(child, index, params)
+        updateView(child)
+    }
+
+    override fun addView(child: View, params: ViewGroup.LayoutParams?) {
+        super.addView(child, params)
+        updateView(child)
+    }
+
+    private fun updateView(view: View) {
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
+        if (view is EditText) {
+            view.setTextColor(Color.WHITE)
+        }
+    }
+
+    private fun pixelsToSp(context: Context, px: Float): Float = px / context.resources.displayMetrics.scaledDensity
 }
